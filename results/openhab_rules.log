@@ -1,0 +1,14 @@
+2026-11-13 18:37:00.084 [WARN ] [rg.openhab.core.model.script.anomaly] - 18:37:00 — Кухня: 26.1 °C, стрибок за 5 хв -5.0 °C (було 31.1 °C)
+2026-11-13 18:37:30.070 [INFO ] [rg.openhab.core.model.script.anomaly] - Різниця між кімнатами повернулась у норму
+2026-11-13 18:37:30.073 [INFO ] [rg.openhab.core.model.script.anomaly] - Кухня: температура повернулась у норму
+2026-11-13 18:37:30.080 [WARN ] [rg.openhab.core.model.script.anomaly] - 18:37:30 — різниця між кімнатами 10.3 °C
+2026-11-13 18:42:30.060 [INFO ] [rg.openhab.core.model.script.anomaly] - Різниця між кімнатами повернулась у норму
+2026-11-13 18:42:30.064 [WARN ] [rg.openhab.core.model.script.anomaly] - 18:42:30 — Кухня: 26.0 °C, стрибок за 5 хв -5.4 °C (було 31.4 °C)
+2026-11-13 18:46:00.062 [INFO ] [rg.openhab.core.model.script.anomaly] - Кухня: температура повернулась у норму
+2026-11-13 18:47:00.060 [WARN ] [rg.openhab.core.model.script.anomaly] - 18:47:00 — різниця між кімнатами 10.7 °C
+2026-11-13 18:47:30.062 [WARN ] [rg.openhab.core.model.script.anomaly] - 18:47:30 — Кухня: 31.4 °C, стрибок за 5 хв +5.3 °C (було 26.0 °C)
+2026-11-13 18:52:00.066 [INFO ] [rg.openhab.core.model.script.anomaly] - Кухня: температура повернулась у норму
+2026-11-13 18:53:00.062 [WARN ] [rg.openhab.core.model.script.anomaly] - 18:53:00 — Кухня: 26.4 °C, стрибок за 5 хв -5.1 °C (було 31.4 °C)
+2026-11-13 18:54:30.060 [INFO ] [rg.openhab.core.model.script.anomaly] - Різниця між кімнатами повернулась у норму
+2026-11-13 18:57:00.061 [INFO ] [rg.openhab.core.model.script.anomaly] - Кухня: температура повернулась у норму
+2026-11-13 19:00:05.726 [INFO ] [openhab.core.model.script.processing] - Погодинний агрегат за 18:00–19:00 збережено в RRD4j

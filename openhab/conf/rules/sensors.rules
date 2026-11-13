@@ -1,0 +1,50 @@
+// Віртуальні датчики температури й вологості для трьох кімнат.
+// Кожні 30 с генерується нове значення: добовий цикл (синусоїда) + повільне
+// наближення до нього + невеликий шум. Так дані схожі на справжній датчик.
+
+import org.openhab.core.model.script.ScriptServiceUtil
+
+val rooms = newArrayList("Living", "Bedroom", "Kitchen")
+
+rule "Віртуальні датчики: нові показники кожні 30 с"
+when
+    System started or
+    Time cron "0/30 * * * * ?"
+then
+    val registry = ScriptServiceUtil.getItemRegistry
+    // Година доби з дробовою частиною: максимум температури близько 15:00.
+    val double hour = now.getHour + now.getMinute / 60.0
+    val double dayWave = Math.sin((hour - 9.0) / 24.0 * 2.0 * Math.PI)
+
+    rooms.forEach [ room |
+        val t = registry.getItem("Temp_" + room)
+        val h = registry.getItem("Hum_" + room)
+
+        var double baseT = 22.0
+        var double baseH = 45.0
+        if (room == "Bedroom") { baseT = 20.0  baseH = 50.0 }
+        if (room == "Kitchen") { baseT = 23.5  baseH = 55.0 }
+
+        var double targetT = baseT + 1.5 * dayWave
+        var double targetH = baseH - 4.0 * dayWave
+
+        // Демонстрація аномалії: різкий стрибок на кухні (наприклад, увімкнена плита).
+        if (room == "Kitchen" && Demo_Anomaly.state == ON) {
+            targetT = targetT + 7.0
+        }
+
+        var double curT = targetT
+        if (t.state instanceof Number) curT = (t.state as Number).doubleValue
+        var double curH = targetH
+        if (h.state instanceof Number) curH = (h.state as Number).doubleValue
+
+        var double nextT = curT + (targetT - curT) * 0.25 + (Math.random - 0.5) * 0.4
+        var double nextH = curH + (targetH - curH) * 0.25 + (Math.random - 0.5) * 1.5
+        // Під час демо стрибок миттєвий, а не плавний.
+        if (room == "Kitchen" && Demo_Anomaly.state == ON && curT < targetT - 3.0) nextT = targetT
+
+        nextH = Math.max(20.0, Math.min(90.0, nextH))
+        t.postUpdate(Math.round(nextT * 100) / 100.0)
+        h.postUpdate(Math.round(nextH * 10) / 10.0)
+    ]
+end

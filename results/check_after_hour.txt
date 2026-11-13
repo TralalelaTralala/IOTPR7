@@ -1,0 +1,41 @@
+== Віртуальні датчики ==
+Temp_Living              22.75
+Hum_Living               42.7
+Temp_Bedroom             20.64
+Hum_Bedroom              46.0
+Temp_Kitchen             24.07
+Hum_Kitchen              53.8
+== Обробка: ковзне вікно 1 год ==
+Temp_Living_Avg1h        22.9
+Temp_Living_Min1h        22.51
+Temp_Living_Max1h        23.28
+Hum_Living_Avg1h         42.52
+Temp_Bedroom_Avg1h       20.82
+Temp_Bedroom_Min1h       20.3
+Temp_Bedroom_Max1h       21.27
+Hum_Bedroom_Avg1h        47.34
+Temp_Kitchen_Avg1h       28.03
+Temp_Kitchen_Min1h       24.07
+Temp_Kitchen_Max1h       31.78
+Hum_Kitchen_Avg1h        52.76
+== Будинок зараз ==
+House_Temp_Avg           22.49
+House_Temp_Min           20.64
+House_Temp_Max           24.07
+House_Temp_Spread        3.43
+House_Hum_Avg            47.5
+Stats_Updated            2026-11-13T19:00:00.070231456+0200
+== Агрегована середня за годину ==
+HourAgg_Period           18:00–19:00
+Temp_Living_HourAgg      22.9
+Temp_Bedroom_HourAgg     20.82
+Temp_Kitchen_HourAgg     28.05
+House_Temp_HourAgg       23.92
+== Аномалії ==
+Anomaly_Living           OFF
+Anomaly_Bedroom          OFF
+Anomaly_Kitchen          OFF
+Anomaly_Spread           OFF
+Anomaly_Count            3
+Anomaly_Last             18:53:00 — Кухня: 26.4 °C, стрибок за 5 хв -5.1 °C (було 31.4 °C)
+Demo_Anomaly             OFF

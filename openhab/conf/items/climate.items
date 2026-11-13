@@ -1,0 +1,56 @@
+// ===== Групи =====
+Group gTemp     "Температура (усі кімнати)"   <temperature>
+Group gHum      "Вологість (усі кімнати)"     <humidity>
+Group gStats    "Результати обробки"
+Group gHourAgg  "Погодинні агрегати"
+Group gAnomaly  "Аномалії"                    <siren>
+
+// ===== Віртуальні датчики (3 кімнати) =====
+Number Temp_Living   "Вітальня: температура [%.1f °C]"   <temperature> (gTemp)
+Number Hum_Living    "Вітальня: вологість [%.0f %%]"     <humidity>    (gHum)
+Number Temp_Bedroom  "Спальня: температура [%.1f °C]"    <temperature> (gTemp)
+Number Hum_Bedroom   "Спальня: вологість [%.0f %%]"      <humidity>    (gHum)
+Number Temp_Kitchen  "Кухня: температура [%.1f °C]"      <temperature> (gTemp)
+Number Hum_Kitchen   "Кухня: вологість [%.0f %%]"        <humidity>    (gHum)
+
+// ===== Обробка по кімнатах: ковзне вікно 1 година =====
+Number Temp_Living_Avg1h   "Вітальня: середня за 1 год [%.2f °C]"  <temperature> (gStats)
+Number Temp_Living_Min1h   "Вітальня: мінімум за 1 год [%.1f °C]"  <temperature> (gStats)
+Number Temp_Living_Max1h   "Вітальня: максимум за 1 год [%.1f °C]" <temperature> (gStats)
+Number Hum_Living_Avg1h    "Вітальня: середня вологість за 1 год [%.1f %%]" <humidity> (gStats)
+
+Number Temp_Bedroom_Avg1h  "Спальня: середня за 1 год [%.2f °C]"   <temperature> (gStats)
+Number Temp_Bedroom_Min1h  "Спальня: мінімум за 1 год [%.1f °C]"   <temperature> (gStats)
+Number Temp_Bedroom_Max1h  "Спальня: максимум за 1 год [%.1f °C]"  <temperature> (gStats)
+Number Hum_Bedroom_Avg1h   "Спальня: середня вологість за 1 год [%.1f %%]" <humidity> (gStats)
+
+Number Temp_Kitchen_Avg1h  "Кухня: середня за 1 год [%.2f °C]"     <temperature> (gStats)
+Number Temp_Kitchen_Min1h  "Кухня: мінімум за 1 год [%.1f °C]"     <temperature> (gStats)
+Number Temp_Kitchen_Max1h  "Кухня: максимум за 1 год [%.1f °C]"    <temperature> (gStats)
+Number Hum_Kitchen_Avg1h   "Кухня: середня вологість за 1 год [%.1f %%]" <humidity> (gStats)
+
+// ===== Обробка по всьому будинку (поточні значення) =====
+Number House_Temp_Avg     "Середня температура зараз [%.2f °C]"    <temperature> (gStats)
+Number House_Temp_Min     "Найхолодніша кімната [%.1f °C]"         <temperature> (gStats)
+Number House_Temp_Max     "Найтепліша кімната [%.1f °C]"           <temperature> (gStats)
+Number House_Temp_Spread  "Різниця між кімнатами [%.1f °C]"        <temperature> (gStats)
+Number House_Hum_Avg      "Середня вологість зараз [%.1f %%]"      <humidity>    (gStats)
+DateTime Stats_Updated    "Обробку виконано [%1$tH:%1$tM:%1$tS]"   <time>
+
+// ===== Агрегована середня за годину (знімок щогодини о хх:00) =====
+Number Temp_Living_HourAgg   "Вітальня: середня за минулу годину [%.2f °C]" <temperature> (gHourAgg)
+Number Temp_Bedroom_HourAgg  "Спальня: середня за минулу годину [%.2f °C]"  <temperature> (gHourAgg)
+Number Temp_Kitchen_HourAgg  "Кухня: середня за минулу годину [%.2f °C]"    <temperature> (gHourAgg)
+Number House_Temp_HourAgg    "Будинок: середня за минулу годину [%.2f °C]"  <temperature> (gHourAgg)
+String HourAgg_Period        "Період агрегації [%s]"                        <time>
+
+// ===== Детекція аномалій (різниця > 5 °C) =====
+Switch Anomaly_Living   "Вітальня: аномалія [%s]"               <siren> (gAnomaly)
+Switch Anomaly_Bedroom  "Спальня: аномалія [%s]"                <siren> (gAnomaly)
+Switch Anomaly_Kitchen  "Кухня: аномалія [%s]"                  <siren> (gAnomaly)
+Switch Anomaly_Spread   "Різниця між кімнатами > 5 °C [%s]"     <siren> (gAnomaly)
+Number Anomaly_Count    "Виявлено аномалій [%d]"                <siren>
+String Anomaly_Last     "Остання аномалія [%s]"                 <siren>
+
+// ===== Демонстрація =====
+Switch Demo_Anomaly     "Демо: різкий стрибок температури на кухні (+7 °C)" <fire>

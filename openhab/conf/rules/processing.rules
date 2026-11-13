@@ -1,0 +1,177 @@
+// Округлення: Math.round(x * 100) / 100.0 — не залежить від локалі (кома/крапка).
+// Правила обробки IoT-даних на основі історії з RRD4j:
+//   1) середнє, мінімум і максимум (ковзне вікно 1 год, кожну хвилину);
+//   2) поточні середнє/мін/макс по всьому будинку;
+//   3) агрегована середня за годину (знімок о хх:00);
+//   4) детекція аномалій: відхилення від середньої за годину > 5 °C
+//      або різниця між кімнатами > 5 °C.
+
+import org.openhab.core.model.script.ScriptServiceUtil
+
+val rooms = newArrayList("Living", "Bedroom", "Kitchen")
+val roomNames = newHashMap("Living" -> "Вітальня", "Bedroom" -> "Спальня", "Kitchen" -> "Кухня")
+val double ANOMALY_LIMIT = 5.0
+
+
+rule "Обробка: середнє, мін/макс за годину (щохвилини)"
+when
+    Time cron "20 * * * * ?"
+then
+    val registry = ScriptServiceUtil.getItemRegistry
+    val since = now.minusHours(1)
+
+    rooms.forEach [ room |
+        val t = registry.getItem("Temp_" + room)
+        val h = registry.getItem("Hum_" + room)
+
+        val avgT = t.averageSince(since, "rrd4j")
+        val minT = t.minimumSince(since, "rrd4j")
+        val maxT = t.maximumSince(since, "rrd4j")
+        val avgH = h.averageSince(since, "rrd4j")
+
+        if (avgT instanceof Number) postUpdate("Temp_" + room + "_Avg1h", (Math.round(((avgT as Number).doubleValue) * 100) / 100.0).toString)
+        if (minT !== null && minT.state instanceof Number) postUpdate("Temp_" + room + "_Min1h", minT.state.toString)
+        if (maxT !== null && maxT.state instanceof Number) postUpdate("Temp_" + room + "_Max1h", maxT.state.toString)
+        if (avgH instanceof Number) postUpdate("Hum_" + room + "_Avg1h", (Math.round(((avgH as Number).doubleValue) * 100) / 100.0).toString)
+    ]
+    logInfo("processing", "Оновлено статистику за останню годину для 3 кімнат")
+end
+
+
+rule "Обробка: поточні показники будинку"
+when
+    Member of gTemp changed or
+    Member of gHum changed
+then
+    var double sum = 0
+    var double mn = 1000
+    var double mx = -1000
+    var int n = 0
+    for (i : gTemp.members) {
+        if (i.state instanceof Number) {
+            val v = (i.state as Number).doubleValue
+            sum = sum + v
+            if (v < mn) mn = v
+            if (v > mx) mx = v
+            n = n + 1
+        }
+    }
+    var double hsum = 0
+    var int hn = 0
+    for (i : gHum.members) {
+        if (i.state instanceof Number) {
+            hsum = hsum + (i.state as Number).doubleValue
+            hn = hn + 1
+        }
+    }
+    if (n == 0) return;
+
+    House_Temp_Avg.postUpdate((Math.round((sum / n) * 100) / 100.0))
+    House_Temp_Min.postUpdate(mn)
+    House_Temp_Max.postUpdate(mx)
+    House_Temp_Spread.postUpdate((Math.round((mx - mn) * 100) / 100.0))
+    if (hn > 0) House_Hum_Avg.postUpdate((Math.round((hsum / hn) * 100) / 100.0))
+    Stats_Updated.postUpdate(new DateTimeType())
+
+    // Аномалія типу 2: різниця між найтеплішою і найхолоднішою кімнатою > 5 °C.
+    if (n == 3) {
+        val spreadAnomaly = (mx - mn) > ANOMALY_LIMIT
+        if (spreadAnomaly && Anomaly_Spread.state != ON) {
+            Anomaly_Spread.postUpdate(ON)
+            val cnt = if (Anomaly_Count.state instanceof Number) (Anomaly_Count.state as Number).intValue else 0
+            Anomaly_Count.postUpdate(cnt + 1)
+            val msg = String::format("%s — різниця між кімнатами %.1f °C", now.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")), mx - mn)
+            Anomaly_Last.postUpdate(msg)
+            logWarn("anomaly", msg)
+        } else if (!spreadAnomaly && Anomaly_Spread.state == ON) {
+            Anomaly_Spread.postUpdate(OFF)
+            logInfo("anomaly", "Різниця між кімнатами повернулась у норму")
+        }
+    }
+end
+
+
+rule "Детекція аномалій у кімнаті (різниця > 5 °C)"
+when
+    Member of gTemp changed
+then
+    val registry = ScriptServiceUtil.getItemRegistry
+    val room = triggeringItem.name.replace("Temp_", "")
+    val flag = registry.getItem("Anomaly_" + room)
+    if (!(triggeringItem.state instanceof Number)) return;
+    val cur = (triggeringItem.state as Number).doubleValue
+
+    // Перевірка А: відхилення від середньої за годину. Базова лінія — середня
+    // за годину БЕЗ останніх 5 хвилин, щоб різкий стрибок не "затягував" її за собою.
+    val baseline = triggeringItem.averageBetween(now.minusHours(1), now.minusMinutes(5), "rrd4j")
+    var double devAvg = 0
+    var double avg = Double.NaN
+    if (baseline instanceof Number) {
+        avg = (baseline as Number).doubleValue
+        devAvg = cur - avg
+    }
+
+    // Перевірка Б: різкий стрибок — різниця з показником 5 хвилин тому.
+    val past = triggeringItem.persistedState(now.minusMinutes(5), "rrd4j")
+    var double jump = 0
+    var double pastVal = Double.NaN
+    if (past !== null && past.state instanceof Number) {
+        pastVal = (past.state as Number).doubleValue
+        jump = cur - pastVal
+    }
+
+    val isAnomaly = Math.abs(devAvg) > ANOMALY_LIMIT || Math.abs(jump) > ANOMALY_LIMIT
+
+    if (isAnomaly && flag.state != ON) {
+        flag.postUpdate(ON)
+        val cnt = if (Anomaly_Count.state instanceof Number) (Anomaly_Count.state as Number).intValue else 0
+        Anomaly_Count.postUpdate(cnt + 1)
+        val reason = if (Math.abs(jump) > ANOMALY_LIMIT)
+            String::format("стрибок за 5 хв %+.1f °C (було %.1f °C)", jump, pastVal)
+        else
+            String::format("відхилення від середньої за годину %+.1f °C (середня %.1f °C)", devAvg, avg)
+        val msg = String::format("%s — %s: %.1f °C, %s",
+            now.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")), roomNames.get(room), cur, reason)
+        Anomaly_Last.postUpdate(msg)
+        logWarn("anomaly", msg)
+    } else if (!isAnomaly && flag.state == ON) {
+        flag.postUpdate(OFF)
+        logInfo("anomaly", roomNames.get(room) + ": температура повернулась у норму")
+    }
+end
+
+
+rule "Агрегована середня за годину (о хх:00)"
+when
+    Time cron "5 0 * * * ?"
+then
+    val registry = ScriptServiceUtil.getItemRegistry
+    val since = now.minusHours(1)
+    var double sum = 0
+    var int n = 0
+    for (room : rooms) {
+        val avg = registry.getItem("Temp_" + room).averageSince(since, "rrd4j")
+        if (avg instanceof Number) {
+            val v = (avg as Number).doubleValue
+            postUpdate("Temp_" + room + "_HourAgg", (Math.round((v) * 100) / 100.0).toString)
+            sum = sum + v
+            n = n + 1
+        }
+    }
+    if (n > 0) House_Temp_HourAgg.postUpdate((Math.round((sum / n) * 100) / 100.0))
+    val period = since.toLocalTime.withSecond(0).withNano(0).toString + "–" + now.toLocalTime.withSecond(0).withNano(0).toString
+    HourAgg_Period.postUpdate(period)
+    logInfo("processing", "Погодинний агрегат за " + period + " збережено в RRD4j")
+end
+
+
+rule "Початкові значення"
+when
+    System started
+then
+    if (!(Anomaly_Count.state instanceof Number)) Anomaly_Count.postUpdate(0)
+    if (Anomaly_Last.state == NULL) Anomaly_Last.postUpdate("немає")
+    if (HourAgg_Period.state == NULL) HourAgg_Period.postUpdate("очікування першої повної години")
+    if (Demo_Anomaly.state == NULL) Demo_Anomaly.postUpdate(OFF)
+    gAnomaly.members.forEach[ i | if (i.state == NULL) i.postUpdate(OFF) ]
+end

@@ -1,0 +1,62 @@
+sitemap climate label="Аналіз IoT-даних: клімат у 3 кімнатах" {
+    Frame label="Будинок зараз" {
+        Text item=House_Temp_Avg
+        Text item=House_Temp_Min
+        Text item=House_Temp_Max
+        Text item=House_Temp_Spread valuecolor=[>5="red", >3="orange", <=3="green"]
+        Text item=House_Hum_Avg
+        Text item=Stats_Updated
+    }
+
+    Frame label="Вітальня" {
+        Text item=Temp_Living
+        Text item=Hum_Living
+        Text item=Temp_Living_Avg1h
+        Text item=Temp_Living_Min1h
+        Text item=Temp_Living_Max1h
+        Text item=Hum_Living_Avg1h
+    }
+    Frame label="Спальня" {
+        Text item=Temp_Bedroom
+        Text item=Hum_Bedroom
+        Text item=Temp_Bedroom_Avg1h
+        Text item=Temp_Bedroom_Min1h
+        Text item=Temp_Bedroom_Max1h
+        Text item=Hum_Bedroom_Avg1h
+    }
+    Frame label="Кухня" {
+        Text item=Temp_Kitchen
+        Text item=Hum_Kitchen
+        Text item=Temp_Kitchen_Avg1h
+        Text item=Temp_Kitchen_Min1h
+        Text item=Temp_Kitchen_Max1h
+        Text item=Hum_Kitchen_Avg1h
+    }
+
+    Frame label="Аномалії (різниця > 5 °C)" {
+        Text item=Anomaly_Living  valuecolor=[ON="red", OFF="green"]
+        Text item=Anomaly_Bedroom valuecolor=[ON="red", OFF="green"]
+        Text item=Anomaly_Kitchen valuecolor=[ON="red", OFF="green"]
+        Text item=Anomaly_Spread  valuecolor=[ON="red", OFF="green"]
+        Text item=Anomaly_Count
+        Text item=Anomaly_Last
+        Switch item=Demo_Anomaly
+    }
+
+    Frame label="Агрегована середня за годину" {
+        Text item=HourAgg_Period
+        Text item=Temp_Living_HourAgg
+        Text item=Temp_Bedroom_HourAgg
+        Text item=Temp_Kitchen_HourAgg
+        Text item=House_Temp_HourAgg
+    }
+
+    Frame label="Графіки температури" {
+        Chart item=gTemp period=h refresh=30000 service="rrd4j" legend=true label="Температура за останню годину"
+        Chart item=gTemp period=D refresh=60000 service="rrd4j" legend=true label="Температура за останню добу"
+    }
+    Frame label="Графіки вологості" {
+        Chart item=gHum period=h refresh=30000 service="rrd4j" legend=true label="Вологість за останню годину"
+        Chart item=gHum period=D refresh=60000 service="rrd4j" legend=true label="Вологість за останню добу"
+    }
+}

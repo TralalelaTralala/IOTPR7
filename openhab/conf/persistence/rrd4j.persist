@@ -1,0 +1,17 @@
+// Автоматичне збереження в локальну базу RRD4j.
+// everyMinute потрібен для графіків: RRD4j зберігає значення з кроком 1 хв,
+// а без регулярного запису "рівні" ділянки графіка мали б пропуски.
+Strategies {
+    everyMinute : "0 * * * * ?"
+    default = everyChange
+}
+
+Items {
+    // сирі показники віртуальних датчиків
+    gTemp*, gHum*       : strategy = everyChange, everyMinute, restoreOnStartup
+    // результати обробки (середні, мін/макс, погодинні агрегати)
+    gStats*, gHourAgg*  : strategy = everyChange, everyMinute, restoreOnStartup
+    // прапорці аномалій та лічильник
+    gAnomaly*           : strategy = everyChange, everyMinute, restoreOnStartup
+    Anomaly_Count       : strategy = everyChange, restoreOnStartup
+}
